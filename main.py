@@ -1,8 +1,10 @@
+from tkinter.tix import TEXT
 import pygame
 import neat
 import time
 import os
 import random
+pygame.font.init()
 
 
 WIN_WIDTH = 500
@@ -17,6 +19,8 @@ BASE_IMG = pygame.transform.scale2x(
     pygame.image.load(os.path.join('imgs', 'base.png')))
 BG_IMG = pygame.transform.scale2x(
     pygame.image.load(os.path.join('imgs', 'bg.png')))
+
+STAT_FONT = pygame.font.SysFont('comicsans', 50)
 
 
 class Bird:
@@ -55,10 +59,10 @@ class Bird:
 
         if d < 0 or self.y < self.height + 50:
             if self.tilt < self.MAX_ROTATION:
-                    self.tilt = self.MAX_ROTATION
+                self.tilt = self.MAX_ROTATION
         else:
             if self.tilt > -90:
-                    self.tilt -= self.ROT_VEL
+                self.tilt -= self.ROT_VEL
 
     def draw(self, win):
         self.img_count += 1
@@ -90,7 +94,7 @@ class Bird:
 
 class Pipe:
     GAP = 200
-    VEL =  5
+    VEL = 5
 
     def __init__(self, x):
         self.x = x
@@ -102,10 +106,11 @@ class Pipe:
         self.PIPE_BOTTOM = PIPE_IMG
 
         self.passed = False
+
         self.set_height()
 
     def set_height(self):
-        self.height = random.randrange(50,450)
+        self.height = random.randrange(50, 450)
         self.top = self.height - self.PIPE_TOP.get_height()
         self.bottom = self.height+self.GAP
 
@@ -132,8 +137,10 @@ class Pipe:
         return False
 
     def draw(self, win):
-        pass
-    
+        win.blit(self.PIPE_TOP, (self.x, self.top))
+        win.blit(self.PIPE_BOTTOM, (self.x, self.bottom))
+
+
 class Base:
     VEL = 5
     WIDTH = BASE_IMG.get_width()
@@ -148,19 +155,39 @@ class Base:
         self.x1 -= self.VEL
         self.x2 -= self.VEL
 
-        if self.x1 + self.WIDTH
+        if self.x1 + self.WIDTH < 0:
+            self.x1 = self.x2 + self.WIDTH
 
-    
-        
+        if self.x2 + self.WIDTH < 0:
+            self.x2 = self.x1 + self.WIDTH
 
-def draw_window(win, bird):
+    def draw(self, win):
+        win.blit(self.IMG, (self.x1, self.y))
+        win.blit(self.IMG, (self.x2, self.y))
+
+
+def draw_window(win, bird, pipes, base, score):
     win.blit(BG_IMG, (0, 0))
+
+    text = STAT_FONT.render('Score: ' + str(score), 1, (255, 255, 255))
+    win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
+
+    for pipe in pipes:
+        pipe.draw(win)
+
+    base.draw(win)
+
     bird.draw(win)
     pygame.display.update()
 
 
 def main():
-    bird = Bird(200, 200)
+    bird = Bird(230, 350)
+    base = Base(730)
+    pipes = [Pipe(600)]
+
+    score = 0
+
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
     clock = pygame.time.Clock()
 
@@ -170,8 +197,35 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+
         # bird.move()
-        draw_window(win, bird)
+        rem = []
+        add_pipe = False
+        for pipe in pipes:
+            if pipe.collide(bird):
+                pass
+
+            if pipe.x + pipe.PIPE_TOP.get_width() < 0:
+                rem.append(pipe)
+
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                add_pipe = True
+
+            pipe.move()
+
+        if add_pipe:
+            score += 1
+            pipes.append(Pipe(600))
+
+        for r in rem:
+            pipes.remove(r)
+
+        if bird.y + bird.img.get_height() >= 730:
+            pass
+
+        base.move()
+        draw_window(win, bird, pipes, base, score)
 
     pygame.quit()
     quit()
