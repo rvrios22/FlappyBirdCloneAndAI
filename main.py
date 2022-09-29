@@ -210,11 +210,11 @@ def main(genomes, config):
     score = 0
 
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-    # clock = pygame.time.Clock()
+    clock = pygame.time.Clock()
 
     run = True
     while run:
-        # clock.tick(30)
+        clock.tick(45)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
